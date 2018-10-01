@@ -47,7 +47,7 @@ def hello_world():
 
 @app.route('/user/<name>')
 def hello_user(name):
-    return '<h1>Hello {0}! <h1>'.format(name)
+    return '<h1>Hello {0} <h1>'.format(name)
 
 @app.route('/artistform', methods = ['GET', 'POST'])
 def artist_form():
