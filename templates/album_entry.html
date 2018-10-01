@@ -1,8 +1,9 @@
 
+
 <form action="{{ url_for('album_result') }}" method="POST">
   {{ form.hidden_tag() }}
   {% for message in get_flashed_messages() %}
-  {{ message }}
+<b> {{ message }} </b>
   {% endfor %}
   {{ form.album.label }} {{ form.album() }} <br>
   {{ form.likes.label }} {{ form.likes() }} <br>

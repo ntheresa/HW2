@@ -11,10 +11,10 @@
 #############################
 ##### IMPORT STATEMENTS #####
 #############################
-from flask import Flask, request, render_template, url_for
+from flask import Flask, request, render_template, flash, url_for, redirect
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, RadioField, ValidationError
-from wtforms.validators import Required
+from wtforms.validators import DataRequired
 
 import requests
 import json
@@ -31,8 +31,8 @@ app.config['SECRET_KEY'] = 'hardtoguessstring'
 ####################
 
 class AlbumEntryForm(FlaskForm):
-    album = StringField('Enter the name of an album: ', validators = [Required()])
-    likes = RadioField('How much do you like this album? (1-low, 3-high)', choices=[('1','1'),('2','2'),('3','3')], validators = [Required()])
+    album = StringField('Enter the name of an album: ', validators = [DataRequired()])
+    likes = RadioField('How much do you like this album? (1-low, 3-high)', choices=[('1','1'),('2','2'),('3','3')], validators = [DataRequired()])
     submit = SubmitField('Submit')
 
 
@@ -47,12 +47,13 @@ def hello_world():
 
 @app.route('/user/<name>')
 def hello_user(name):
-    return '<h1>Hello {0}<h1>'.format(name)
+    return '<h1>Hello {0}! <h1>'.format(name)
 
 @app.route('/artistform', methods = ['GET', 'POST'])
 def artist_form():
     artistname = request.args.get('artist')
     return render_template('artistform.html', artist=artistname)
+
 
 @app.route('/artistinfo', methods = ['GET', 'POST'])
 def artist_info():
@@ -63,19 +64,21 @@ def artist_info():
         response_text = json.loads(response.text)
         result_list = response_text['results']
         return render_template('artist_info.html', objects=result_list)
+    flask('All fields are required')
+    return redirect(url_for('artist_form'))
 
 @app.route('/artistlinks', methods = ['GET', 'POST'])
 def artist_links():
     return render_template('artist_links.html')
 
-@app.route('/specific/song/<artist_name>', methods = ['GET', 'POST'])
+@app.route('/specific/song/<artist_name>')
 def specific_song(artist_name):
     params = {}
-    if request.method == 'GET':
-        params['term'] = request.args.get(artist_name)
-        response = requests.get('https://itunes.apple.com/search?', params=params).json()
-        song_info = response['results']
-        return render_template('specific_artist.html', results=song_info)
+    params['term'] = artist_name
+    response = requests.get('https://itunes.apple.com/search?', params=params)
+    response_text = json.loads(response.text)
+    song_info = response_text['results']
+    return render_template('specific_artist.html', results=song_info)
 
 @app.route('/album_entry', methods = ['GET', 'POST'])
 def album_entry():
@@ -91,7 +94,7 @@ def album_result():
         return render_template('album_data.html', album=album_name, likescore=likeness)
 
     flash('All fields are required!')
-    return redirect(url_for('itunes_form'))
+    return redirect(url_for('album_entry'))
 
 if __name__ == '__main__':
     app.run(use_reloader=True,debug=True)
